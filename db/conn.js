@@ -11,8 +11,10 @@ module.exports = {
   connectToServer: function (callback) {
     client.connect(function (err, db) {
       // Verify we got a good "db" object
+      console.log(`Attempting to connect to db: ${db.s.url}`);
       if (db) {
-        _db = db.db("employees");
+        console.log(`Selecting db: ${process.env.DB_NAME}`)
+        _db = db.db(process.env.DB_NAME);
       }
       return callback(err);
     });

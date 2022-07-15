@@ -42,30 +42,67 @@ recordRoutes.route("/artist/:id").get(function (req, res) {
      res.json(result);
    });
 });
+
+recordRoutes.route("/artistdocs").get(function (req, res) {
+  console.log(`RUNNING GET MANY`);
+  let db_connect = dbo.getDb();
+  let myquery = { artistID: { "$in": req.query.artistIDs } };
+  console.log(`Got req:`);
+  console.log(req.query);
+  console.log(`Working with query: ${JSON.stringify(myquery)}`);
+
+  db_connect.collection("artistSubscribers")
+    .find(myquery)
+    .toArray(function (err, result) {
+      if (err) throw err;
+      console.log(`Got many results:`);
+      console.log(result);
+      res.json(result);
+    })
+})
+
  
 // This section will help you create a new record.
-recordRoutes.route("/artist/add").post(function (req, response) {
+recordRoutes.route("/artist/add").post(function (req, res) {
  let db_connect = dbo.getDb();
- console.log(`Connected and got db:`);
- console.log(db_connect);
- db_connect.collection("artistSubscribers").insertOne(req.body, function (err, res) {
-   if (err) throw err;
-   response.json(res);
- });
+ console.log(`ADDING DOC:`);
+ console.log(req.body);
+ db_connect.collection("artistSubscribers")
+   .insertOne(req.body, function (err, response) {
+     if (err) throw err;
+     console.log(`finished adding doc`);
+     res.json(response);
+   });
 });
- 
-// // This section will help you update a record by id.
-// recordRoutes.route("/update/:id").post(function (req, response) {
-//  let db_connect = dbo.getDb(); 
-//  let myquery = { _id: ObjectId( req.params.id )}; 
-//  let newvalues = {   
-//    $set: {     
-//      name: req.body.name,    
-//      position: req.body.position,     
-//      level: req.body.level,   
-//    }, 
-//   }
-// });
+
+recordRoutes.route("/update/:id/email/:email").post(function (req, res) {
+  let db_connect = dbo.getDb();
+  console.log(`UPDATING DOC:`);
+  console.log(req.params);
+
+  db_connect.collection("artistSubscribers").findOne({artistID: req.params.id})
+  .then(existingDoc => {
+
+    var newDoc = {...existingDoc}
+    if (!newDoc.subscribers.includes(req.params.email)) {
+      newDoc.subscribers.push(req.params.email);
+    }
+
+    db_connect.collection("artistSubscribers").replaceOne(
+      { artistID: req.params.id },
+      newDoc
+    )
+    .then((result) => {
+      res.json(result);
+    })
+  })
+
+  db_connect.collection("artistSubscribers")
+
+})
+
+// TODO: Will eventually need an update func to remove
+
  
 // // This section will help you delete a record
 // recordRoutes.route("/:id").delete((req, response) => {
